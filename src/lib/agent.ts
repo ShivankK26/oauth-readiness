@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { z } from "zod";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { Guide } from "./schema";
@@ -42,7 +42,9 @@ Rules:
 - difficulty: easy = self-serve, no review for external users; moderate = self-serve but review/listing for some paths or notable admin-consent friction; hard = mandatory review or paid tier before real users; very_hard = security audit / partner approval / weeks-to-months.
 - owner per step: "agent" if an agent with a browser or API could do it (filling forms, drafting docs, writing code, probing endpoints); "human" for account ownership, payment, legal acceptance, identity/business verification, recording demo videos, talking to the provider; "either" otherwise.
 - Put gaps into uncertainties. meta.origin = "live". meta.verificationNotes should list what was probed and what came back.
-- 3–5 phases; mark provider waiting phases with isWait=true.`;
+- 3–5 phases; mark provider waiting phases with isWait=true.
+- Output a single JSON object and nothing else (no prose, no code fences). It must validate against this JSON Schema:
+${JSON.stringify(z.toJSONSchema(Guide))}`;
 
 const probeTool: Anthropic.Tool = {
   name: "probe_endpoint",
@@ -106,6 +108,7 @@ export async function generateGuide(app: string, emit: Emit, signal?: AbortSigna
 
   emit({ type: "status", message: `Researching ${app}…` });
   let dossier = "";
+  const seen = new Set<string>();
   for (let turn = 0; turn < 12; turn++) {
     const stream = client.messages.stream(
       {
@@ -120,8 +123,12 @@ export async function generateGuide(app: string, emit: Emit, signal?: AbortSigna
     );
     stream.on("text", (delta) => emit({ type: "note", text: delta }));
     stream.on("contentBlock", (block) => {
-      if (block.type === "server_tool_use") {
-        const input = block.input as { query?: string; url?: string };
+      if (block.type !== "server_tool_use") return;
+      const input = block.input as { query?: string; url?: string };
+      // The same search can surface as more than one block; report each query/URL once.
+      const key = `${block.name}:${input.query ?? input.url}`;
+      if (!seen.has(key)) {
+        seen.add(key);
         if (block.name === "web_search" && input.query) emit({ type: "search", query: input.query });
         if (block.name === "web_fetch" && input.url) emit({ type: "fetch", url: input.url });
       }
@@ -154,23 +161,49 @@ export async function generateGuide(app: string, emit: Emit, signal?: AbortSigna
   if (!dossier.trim()) throw new Error("Research did not produce findings.");
 
   emit({ type: "status", message: "Writing the guide…" });
-  const res = await client.messages.parse(
+  // Plain JSON validated with zod rather than structured outputs: the guide schema is too deeply nested
+  // for the constrained-decoding grammar ("compiled grammar is too large"). One repair turn on failure.
+  const synth: Anthropic.MessageParam[] = [
     {
-      model: MODEL,
-      max_tokens: 32000,
-      system: SYNTH_SYSTEM,
-      output_config: { effort: "low", format: zodOutputFormat(Guide) },
-      messages: [
-        {
-          role: "user",
-          content: `App: ${app}\nslug: ${slugify(app)}\nreviewedAt: ${new Date().toISOString().slice(0, 10)}\n\nResearch dossier:\n${dossier}`,
-        },
-      ],
+      role: "user",
+      content: `App: ${app}\nslug: ${slugify(app)}\nreviewedAt: ${new Date().toISOString().slice(0, 10)}\n\nResearch dossier:\n${dossier}`,
     },
-    { signal }
-  );
-  if (!res.parsed_output) throw new Error(`Guide synthesis failed (stop_reason: ${res.stop_reason}).`);
-  const guide = res.parsed_output;
-  guide.meta.origin = "live";
-  return guide;
+  ];
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const msg = await client.messages
+      .stream(
+        { model: MODEL, max_tokens: 32000, system: SYNTH_SYSTEM, output_config: { effort: "low" }, messages: synth },
+        { signal }
+      )
+      .finalMessage();
+    if (msg.stop_reason === "refusal") throw new Error("The model declined this request.");
+    const text = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+    const parsed = parseGuideJson(text);
+    if (parsed.success) {
+      parsed.data.meta.origin = "live";
+      return parsed.data;
+    }
+    if (attempt === 0) emit({ type: "status", message: "Fixing the guide format…" });
+    synth.push(
+      { role: "assistant", content: text || "(empty)" },
+      { role: "user", content: `That output failed validation:\n${parsed.error}\nReturn the complete corrected JSON object only.` }
+    );
+  }
+  throw new Error("Guide synthesis failed: the model's output did not match the guide schema.");
+}
+
+function parseGuideJson(text: string): { success: true; data: Guide } | { success: false; error: string } {
+  const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+  let raw: unknown;
+  try {
+    raw = JSON.parse(json);
+  } catch (err) {
+    return { success: false, error: `Invalid JSON: ${(err as Error).message}` };
+  }
+  const res = Guide.safeParse(raw);
+  if (res.success) return { success: true, data: res.data };
+  return {
+    success: false,
+    error: res.error.issues.slice(0, 30).map((i) => `- ${i.path.join(".")}: ${i.message}`).join("\n"),
+  };
 }
