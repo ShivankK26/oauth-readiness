@@ -1,5 +1,7 @@
 # OAuth Readiness
 
+**Live: https://oauth-readiness-iota.vercel.app** · Repo: https://github.com/ShivankK26/oauth-readiness
+
 **Will your OAuth app take an hour or six weeks?** OAuth Readiness gives developers building AI agents a shareable, evidence-labelled guide for creating an OAuth app with a provider and getting it approved: effort, approval wait, what triggers review, what will block you, and which steps an agent can do for you.
 
 - **Library**: 8 curated guides for apps with deliberately different setup paths, from instant (GitHub, Notion) to a security audit (Gmail): Slack, HubSpot, Microsoft Outlook, Salesforce and X in between.
@@ -13,6 +15,7 @@ npm install
 cp .env.example .env.local   # add ANTHROPIC_API_KEY (only needed for live generation)
 npm run dev                  # http://localhost:3000
 npx tsx scripts/validate.ts  # validate all guides against the schema + source references
+npx tsx --env-file=.env.local scripts/live-test.ts "Calendly" out.json   # one live generation from the CLI
 ```
 
 Deploy: import the repo into Vercel and set `ANTHROPIC_API_KEY`. Live generation runs up to 300s per request (`maxDuration`). Optional: `ANTHROPIC_MODEL` (default `claude-opus-5-5`).
@@ -44,7 +47,7 @@ So the guide's job is to answer, in this order: **how bad is it, how long, what 
 2. **Evidence labels on every claim.** Each step, requirement, scope, blocker and verdict is labelled `tested` / `documented` / `reported` / `inferred`, with source links. Review timelines are almost never documented. Saying so honestly is more useful than a confident number, and it tells the developer exactly what to confirm.
 3. **Agent vs. human is part of the guide.** Each step is tagged *Agent can do* / *You* / *either*. Agents can draft privacy policies, fill console forms, write the integration, and probe endpoints. Humans must own accounts, accept legal terms, pay, verify identity or business, record demo videos, and talk to the provider.
 4. **One schema for curated and live guides.** A zod schema (`src/lib/schema.ts`) is the contract. Curated research agents wrote JSON against it (validated by `scripts/validate.ts`, which also checks every cited source id exists). The live agent's writing step uses Claude structured outputs with the same schema, so live and curated guides render identically.
-5. **Research, then write.** The live agent runs in two calls. (a) Research: Claude with web search, web fetch and a custom `probe_endpoint` tool, which makes a real unauthenticated request to the authorize URL or console and records the status and error text. That's where `tested` evidence comes from. (b) Writing: a structured-output call that turns the research notes into the guide, told to downgrade evidence when in doubt. They're split because structured outputs and web citations can't share a call, and because it keeps the evidence rules in one focused prompt.
+5. **Research, then write.** The live agent runs in two calls. (a) Research: Claude with web search, web fetch and a custom `probe_endpoint` tool, which makes a real unauthenticated request to the authorize URL or console and records the status and error text. That's where `tested` evidence comes from. (b) Writing: a second call that turns the research notes into guide JSON, told to downgrade evidence when in doubt. The output is validated against the same zod schema, and validation errors are sent back for one repair turn. I first used constrained structured outputs here, but the guide schema is too deeply nested for the decoding grammar ("compiled grammar is too large"), so validate-and-repair it is. Splitting the calls also keeps the evidence rules in one focused prompt.
 6. **Progress, not just reading.** Steps are a checklist with progress saved in the browser. "Copy as Markdown" drops the guide into a ticket, PR or Notion page with checkboxes and source links.
 7. **Shareable without a database.** Live guides are compressed into the URL fragment (`/g#…`). No storage, no credentials, and the link always shows exactly the version that was generated. Curated guides have stable URLs (`/apps/<slug>`).
 
@@ -65,6 +68,10 @@ See `/method` (data in `data/verification.json`). An independent verifier agent 
 - **Gmail**: a CASA cost range was labelled *documented*. Google publishes no prices, so it's now *reported*, with vendor figures.
 - **Salesforce and Notion**: two claims were over-labelled (*tested* → *documented*, *documented* → *reported*).
 - **Couldn't verify**: two Salesforce policy changes (Salesforce's help pages returned 403 to agents). Both are now *reported* and listed under the guide's uncertainties.
+
+### Live generation, tested end to end
+
+Calendly (from the CLI) and Linear (through the deployed UI) were generated live. Calendly took 170s: 134s research with 9 probes and ~15 searches, 36s writing. The guide validated on the first try, with no dangling source ids. Its verdict: easy, PKCE (S256) required, refresh tokens rotate on every use, Composio managed app available. It listed 8 open uncertainties, including access-token lifetime and rate limits found only in third-party sources.
 
 ## Limitations
 
