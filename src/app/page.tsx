@@ -1,103 +1,42 @@
-import Image from "next/image";
+import { AppSearch, type GuideSummary } from "@/components/AppSearch";
+import { listGuides } from "@/lib/guides";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const guides: GuideSummary[] = listGuides().map((g) => ({
+    slug: g.slug,
+    name: g.name,
+    website: g.website,
+    category: g.category,
+    oneLiner: g.oneLiner,
+    difficulty: g.verdict.difficulty,
+    activeEffort: g.verdict.activeEffort,
+    approvalWait: g.verdict.approvalWait,
+    reviewRequired: g.verdict.reviewRequired,
+  }));
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <div className="space-y-10">
+      <section className="max-w-3xl space-y-4">
+        <h1 className="text-4xl font-semibold tracking-tight">Will your OAuth app take an hour or six weeks?</h1>
+        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+          Before your AI agent&apos;s users can connect an app, you need your own OAuth app registered with that provider. Some providers approve it instantly. Others require security audits, marketplace review or a paid tier. Look up an app to see the effort, the wait, what blocks approval, and which steps an agent can do for you.
+        </p>
+      </section>
+      <AppSearch guides={guides} />
+      <section className="grid gap-4 rounded-xl bg-zinc-50 p-5 text-sm dark:bg-zinc-900 md:grid-cols-3">
+        <div>
+          <div className="font-semibold">Developer → OAuth app → users</div>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">You register one OAuth app per provider. Each of your users clicks &ldquo;Allow&rdquo; on that app&apos;s consent screen to create their connection. The review gate sits between your app and <em>external</em> users.</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div>
+          <div className="font-semibold">Ship today, approve in parallel</div>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">Every guide leads with the fastest path, such as test users, an internal app or a managed OAuth app like Composio&apos;s, so the approval wait doesn&apos;t block development.</p>
+        </div>
+        <div>
+          <div className="font-semibold">Evidence on every claim</div>
+          <p className="mt-1 text-zinc-600 dark:text-zinc-400">Each claim is labelled <em>tested</em>, <em>documented</em>, <em>reported</em> or <em>inferred</em>, with a source link. Review timelines are rarely documented, and the guides say so.</p>
+        </div>
+      </section>
     </div>
   );
 }
