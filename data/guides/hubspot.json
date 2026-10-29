@@ -14,7 +14,11 @@
     "reviewTrigger": "Exceeding 25 installs of a marketplace-distribution OAuth app (or removing the unverified-app warning) requires an approved App Marketplace listing",
     "cost": "Free (developer account, test accounts and listing are free)",
     "evidence": "documented",
-    "sourceIds": ["h2", "h3", "h4"]
+    "sourceIds": [
+      "h2",
+      "h3",
+      "h4"
+    ]
   },
   "fastPath": "Use Composio's managed HubSpot OAuth app today — Composio lists HubSpot (HUBSPOT) under 'Composio-managed OAuth available' (confirm via the toolkit's composio_managed_auth_schemes). Meanwhile build your own project-based app with distribution=marketplace and auth=oauth; it works immediately for developer test accounts and up to 25 real customer accounts while you collect the 3 active installs needed to apply for listing.",
   "phases": [
@@ -28,14 +32,18 @@
           "detail": "Sign up at https://developers.hubspot.com (free developer account) or use an account with developer project access. A human must create the account and verify email.",
           "owner": "human",
           "evidence": "documented",
-          "sourceIds": ["h8"]
+          "sourceIds": [
+            "h8"
+          ]
         },
         {
           "title": "Install and authenticate the HubSpot CLI",
           "detail": "npm install -g @hubspot/cli@latest (docs reference v7.6.0+), then run hs account auth. This opens HubSpot in a browser to generate/paste a personal access key — the human completes the browser step; the agent can run everything else.",
           "owner": "either",
           "evidence": "documented",
-          "sourceIds": ["h8"]
+          "sourceIds": [
+            "h8"
+          ]
         }
       ]
     },
@@ -49,21 +57,29 @@
           "detail": "hs project create → base content 'App' → distribution 'Marketplace' (needed for >10 external installs) → authentication 'OAuth' → pick features. Legacy public apps (Developer account → Apps → Create app UI) can no longer be created since 2026-06-23.",
           "owner": "agent",
           "evidence": "documented",
-          "sourceIds": ["h8", "h9"]
+          "sourceIds": [
+            "h8",
+            "h9"
+          ]
         },
         {
           "title": "Configure auth in app-hsmeta.json",
           "detail": "Set uid (keep stable forever), name, and auth: { type: 'oauth', distribution: 'marketplace', redirectUrls: ['https://your-callback'] (HTTPS; http://localhost only for testing; no IP addresses), requiredScopes: [...], optionalScopes: [...], conditionallyRequiredScopes: [...] }. Include a read scope for every CRM object you touch.",
           "owner": "agent",
           "evidence": "documented",
-          "sourceIds": ["h7", "h6"]
+          "sourceIds": [
+            "h7",
+            "h6"
+          ]
         },
         {
           "title": "Upload and copy client credentials",
           "detail": "hs project upload, then hs project open → Project Components → your app → Auth tab → Client credentials: copy Client ID and Client secret into your OAuth server config.",
           "owner": "either",
           "evidence": "documented",
-          "sourceIds": ["h8"]
+          "sourceIds": [
+            "h8"
+          ]
         }
       ]
     },
@@ -77,21 +93,30 @@
           "detail": "HubSpot → Development → Test accounts → Create developer test account. Test accounts do not count toward install caps; they expire after 90 days without API calls unless renewed.",
           "owner": "either",
           "evidence": "documented",
-          "sourceIds": ["h8", "h10"]
+          "sourceIds": [
+            "h8",
+            "h10"
+          ]
         },
         {
           "title": "Install and run the OAuth flow",
           "detail": "Projects → your project → app UID → Distribution tab → Add test install(s) → Install → tick the unverified-app box → Connect app. Or drive it yourself: https://app.hubspot.com/oauth/authorize?client_id=...&redirect_uri=...&scope=<required, %20-separated>&optional_scope=...&state=..., then POST https://api.hubapi.com/oauth/v3/token with grant_type=authorization_code. Access tokens last 1800 s; refresh with grant_type=refresh_token.",
           "owner": "either",
           "evidence": "documented",
-          "sourceIds": ["h5", "h6", "h8"]
+          "sourceIds": [
+            "h5",
+            "h6",
+            "h8"
+          ]
         },
         {
           "title": "Sign the Acceptable Use Policy for non-test installs",
           "detail": "For marketplace-distribution apps, installs into accounts other than developer test accounts are blocked until the AUP is signed (Distribution tab). This is a legal acceptance a human must make.",
           "owner": "human",
           "evidence": "documented",
-          "sourceIds": ["h2"]
+          "sourceIds": [
+            "h2"
+          ]
         }
       ]
     },
@@ -105,21 +130,28 @@
           "detail": "At least three unique production HubSpot accounts not affiliated with your organization, each with successful app activity in the past 30 days.",
           "owner": "human",
           "evidence": "documented",
-          "sourceIds": ["h4"]
+          "sourceIds": [
+            "h4"
+          ]
         },
         {
           "title": "Prepare and submit the listing",
           "detail": "Provide live, public URLs for Terms of Service, Privacy Policy, support contact and HubSpot-specific setup documentation; pricing matching your website; remove any unused scopes (every requested scope must be used). Submit from the app's listing section.",
           "owner": "human",
           "evidence": "documented",
-          "sourceIds": ["h4"]
+          "sourceIds": [
+            "h4"
+          ]
         },
         {
           "title": "Respond to Ecosystem Quality review",
           "detail": "Initial review within 10 business days; the feedback loop should complete within 60 days of feedback being shared. On approval the 25-install cap and the unverified warning are removed.",
           "owner": "human",
           "evidence": "documented",
-          "sourceIds": ["h3", "h4"]
+          "sourceIds": [
+            "h3",
+            "h4"
+          ]
         }
       ]
     }
@@ -130,42 +162,57 @@
       "detail": "Project-based apps are created and uploaded with @hubspot/cli (hs project create / upload); the old UI path for new public apps is gone.",
       "blocking": true,
       "evidence": "documented",
-      "sourceIds": ["h8", "h9"]
+      "sourceIds": [
+        "h8",
+        "h9"
+      ]
     },
     {
       "item": "HTTPS redirect URL on a domain",
       "detail": "redirectUrls must be HTTPS; http://localhost allowed only for testing; IP addresses unsupported; the token request redirect_uri must match.",
       "blocking": true,
       "evidence": "documented",
-      "sourceIds": ["h6", "h7"]
+      "sourceIds": [
+        "h6",
+        "h7"
+      ]
     },
     {
       "item": "Signed Acceptable Use Policy",
       "detail": "Required before marketplace-distribution apps can be installed outside developer test accounts.",
       "blocking": true,
       "evidence": "documented",
-      "sourceIds": ["h2"]
+      "sourceIds": [
+        "h2"
+      ]
     },
     {
       "item": "Installer is Super Admin or has Marketplace Access permission",
       "detail": "End users without this permission cannot complete the install in their portal.",
       "blocking": true,
       "evidence": "documented",
-      "sourceIds": ["h6"]
+      "sourceIds": [
+        "h6"
+      ]
     },
     {
       "item": "Refresh-token handling",
       "detail": "Access tokens expire after 30 minutes (expires_in 1800); your backend must refresh via /oauth/v3/token.",
       "blocking": true,
       "evidence": "documented",
-      "sourceIds": ["h5"]
+      "sourceIds": [
+        "h5"
+      ]
     },
     {
       "item": "Marketplace listing (only beyond 25 installs)",
       "detail": "3+ active unaffiliated installs, live ToS/privacy/support/setup-doc URLs, matching pricing, only used scopes.",
       "blocking": false,
       "evidence": "documented",
-      "sourceIds": ["h3", "h4"]
+      "sourceIds": [
+        "h3",
+        "h4"
+      ]
     }
   ],
   "scopes": [
@@ -175,7 +222,9 @@
       "tier": "basic",
       "triggersReview": false,
       "evidence": "inferred",
-      "sourceIds": ["h5"]
+      "sourceIds": [
+        "h5"
+      ]
     },
     {
       "scope": "crm.objects.contacts.read",
@@ -183,7 +232,10 @@
       "tier": "basic",
       "triggersReview": false,
       "evidence": "documented",
-      "sourceIds": ["h6", "h7"]
+      "sourceIds": [
+        "h6",
+        "h7"
+      ]
     },
     {
       "scope": "crm.objects.contacts.write",
@@ -191,7 +243,9 @@
       "tier": "basic",
       "triggersReview": false,
       "evidence": "inferred",
-      "sourceIds": ["h7"]
+      "sourceIds": [
+        "h7"
+      ]
     },
     {
       "scope": "crm.objects.companies.read",
@@ -199,7 +253,9 @@
       "tier": "basic",
       "triggersReview": false,
       "evidence": "inferred",
-      "sourceIds": ["h7"]
+      "sourceIds": [
+        "h7"
+      ]
     },
     {
       "scope": "crm.objects.deals.read",
@@ -207,7 +263,10 @@
       "tier": "basic",
       "triggersReview": false,
       "evidence": "inferred",
-      "sourceIds": ["h6", "h7"]
+      "sourceIds": [
+        "h6",
+        "h7"
+      ]
     },
     {
       "scope": "tickets",
@@ -215,7 +274,9 @@
       "tier": "basic",
       "triggersReview": false,
       "evidence": "inferred",
-      "sourceIds": ["h6"]
+      "sourceIds": [
+        "h6"
+      ]
     }
   ],
   "technical": {
@@ -234,7 +295,14 @@
       "Unlisted apps show an 'unverified app' banner; users must type 'I accept the risk' to proceed."
     ],
     "evidence": "documented",
-    "sourceIds": ["h2", "h3", "h5", "h6", "h7", "h8"]
+    "sourceIds": [
+      "h2",
+      "h3",
+      "h5",
+      "h6",
+      "h7",
+      "h8"
+    ]
   },
   "blockers": [
     {
@@ -242,35 +310,47 @@
       "symptom": "New customer installs fail once 25 non-test accounts have installed the app",
       "resolution": "Submit for App Marketplace listing early (needs 3 active unaffiliated installs); cap lifts on approval. No exceptions reported.",
       "evidence": "documented",
-      "sourceIds": ["h2", "h3"]
+      "sourceIds": [
+        "h2",
+        "h3"
+      ]
     },
     {
       "blocker": "Private distribution chosen by mistake",
       "symptom": "Only 10 allowlisted accounts (100 for Solutions Partners) can install; others are rejected",
       "resolution": "Switch the project to distribution 'marketplace' (switching a private app later doesn't interrupt existing installs).",
       "evidence": "documented",
-      "sourceIds": ["h2", "h3"]
+      "sourceIds": [
+        "h2",
+        "h3"
+      ]
     },
     {
       "blocker": "AUP not signed",
       "symptom": "App installs in developer test accounts but cannot be installed in any other account",
       "resolution": "Have the account owner sign the Acceptable Use Policy on the app's Distribution tab.",
       "evidence": "documented",
-      "sourceIds": ["h2"]
+      "sourceIds": [
+        "h2"
+      ]
     },
     {
       "blocker": "Installing user lacks permission or portal lacks a required scope",
       "symptom": "Authorization page error; OAuth logs show AUTHORIZATION_REQUEST errors",
       "resolution": "Ask a Super Admin (or user with Marketplace Access) to install; move product-dependent scopes to optionalScopes.",
       "evidence": "documented",
-      "sourceIds": ["h6"]
+      "sourceIds": [
+        "h6"
+      ]
     },
     {
       "blocker": "Expired/invalid authorization code",
       "symptom": "Token endpoint returns {\"status\":\"BAD_AUTH_CODE\",\"message\":\"missing or unknown auth code\",\"error\":\"invalid_request\"}",
       "resolution": "Exchange the code immediately after redirect and make sure redirect_uri matches exactly.",
       "evidence": "tested",
-      "sourceIds": ["h11"]
+      "sourceIds": [
+        "h11"
+      ]
     }
   ],
   "agentHandoff": {
@@ -297,17 +377,72 @@
     "Developer test account 90-day expiry/renewal rules come from the test-accounts doc via search summary; community answers conflict on renewal after expiry."
   ],
   "sources": [
-    { "id": "h1", "title": "Composio — Managed auth toolkits", "url": "https://docs.composio.dev/toolkits/managed-auth", "kind": "other" },
-    { "id": "h2", "title": "HubSpot — Manage apps in HubSpot (install limits, AUP, unverified warnings)", "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/manage-apps-in-hubspot", "kind": "official_docs" },
-    { "id": "h3", "title": "HubSpot changelog — New marketplace distribution app install limits", "url": "https://developers.hubspot.com/changelog/new-marketplace-distribution-app-install-limits", "kind": "official_policy" },
-    { "id": "h4", "title": "HubSpot — App Marketplace listing requirements", "url": "https://developers.hubspot.com/docs/apps/developer-platform/list-apps/listing-your-app/app-marketplace-listing-requirements", "kind": "official_policy" },
-    { "id": "h5", "title": "HubSpot — OAuth quickstart guide", "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/oauth-quickstart-guide", "kind": "official_docs" },
-    { "id": "h6", "title": "HubSpot — Working with OAuth", "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth", "kind": "official_docs" },
-    { "id": "h7", "title": "HubSpot — App configuration (app-hsmeta.json)", "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/app-configuration", "kind": "official_docs" },
-    { "id": "h8", "title": "HubSpot — Create an app", "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app", "kind": "official_docs" },
-    { "id": "h9", "title": "HubSpot — Legacy apps overview", "url": "https://developers.hubspot.com/docs/apps/legacy-apps/overview", "kind": "official_docs" },
-    { "id": "h10", "title": "HubSpot — Creating test accounts", "url": "https://developers.hubspot.com/docs/api/creating-test-accounts", "kind": "official_docs" },
-    { "id": "h11", "title": "Hands-on probe of HubSpot OAuth endpoints with fake client_id (2026-10-29)", "url": "https://api.hubapi.com/oauth/v3/token", "kind": "setup_attempt" }
+    {
+      "id": "h1",
+      "title": "Composio — Managed auth toolkits",
+      "url": "https://docs.composio.dev/toolkits/managed-auth",
+      "kind": "other"
+    },
+    {
+      "id": "h2",
+      "title": "HubSpot — Manage apps in HubSpot (install limits, AUP, unverified warnings)",
+      "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/manage-apps-in-hubspot",
+      "kind": "official_docs"
+    },
+    {
+      "id": "h3",
+      "title": "HubSpot changelog — New marketplace distribution app install limits",
+      "url": "https://developers.hubspot.com/changelog/new-marketplace-distribution-app-install-limits",
+      "kind": "official_policy"
+    },
+    {
+      "id": "h4",
+      "title": "HubSpot — App Marketplace listing requirements",
+      "url": "https://developers.hubspot.com/docs/apps/developer-platform/list-apps/listing-your-app/app-marketplace-listing-requirements",
+      "kind": "official_policy"
+    },
+    {
+      "id": "h5",
+      "title": "HubSpot — OAuth quickstart guide",
+      "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/oauth-quickstart-guide",
+      "kind": "official_docs"
+    },
+    {
+      "id": "h6",
+      "title": "HubSpot — Working with OAuth",
+      "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/working-with-oauth",
+      "kind": "official_docs"
+    },
+    {
+      "id": "h7",
+      "title": "HubSpot — App configuration (app-hsmeta.json)",
+      "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/app-configuration",
+      "kind": "official_docs"
+    },
+    {
+      "id": "h8",
+      "title": "HubSpot — Create an app",
+      "url": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/create-an-app",
+      "kind": "official_docs"
+    },
+    {
+      "id": "h9",
+      "title": "HubSpot — Legacy apps overview",
+      "url": "https://developers.hubspot.com/docs/apps/legacy-apps/overview",
+      "kind": "official_docs"
+    },
+    {
+      "id": "h10",
+      "title": "HubSpot — Creating test accounts",
+      "url": "https://developers.hubspot.com/docs/api/creating-test-accounts",
+      "kind": "official_docs"
+    },
+    {
+      "id": "h11",
+      "title": "Hands-on probe of HubSpot OAuth endpoints with fake client_id (2026-10-29)",
+      "url": "https://api.hubapi.com/oauth/v3/token",
+      "kind": "setup_attempt"
+    }
   ],
   "meta": {
     "origin": "curated",
@@ -317,7 +452,8 @@
       "GET https://app.hubspot.com/oauth/authorize with a fake client_id returns HTTP 200 and a JS app shell; the client_id error is rendered client-side, so not observed.",
       "Corrected common belief: 'create a public app in your developer account UI' is outdated — legacy public apps can't be created since 2026-06-23; new OAuth apps are CLI projects (platform 2025.2 launched 2025-09-03, docs now target 2026.03).",
       "Confirmed the install cap precisely: marketplace-distribution OAuth apps 25 accounts before listing (test accounts excluded); private OAuth apps 10 allowlisted accounts (100 for Solutions Partners); static-token apps 1 account.",
-      "Did not create a HubSpot account or app (no credentials used)."
+      "Did not create a HubSpot account or app (no credentials used).",
+      "Verifier confirmed against HubSpot docs (Legacy apps overview, Manage apps, Listing requirements, OAuth quickstart, Test accounts): legacy public apps can't be created as of June 23, 2026; 25 / 10 / 1 install caps excluding test accounts; AUP needed before non-test installs; 3 active unaffiliated installs within 30 days, 10 business days initial review, ≤60 days after feedback; expires_in 1800; test accounts expire after 90 days without API calls."
     ]
   }
 }

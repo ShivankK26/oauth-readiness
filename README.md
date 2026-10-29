@@ -29,7 +29,7 @@ What the research found (see each guide for sources and evidence labels):
 |---|---|---|---|
 | GitHub | Easy | None from GitHub; customer org owners may restrict third-party apps | none |
 | Notion | Easy | None to use OAuth; Marketplace listing optional | none (listing 5–10 business days) |
-| Slack | Moderate | Unlisted commercial apps are rate-limited on history reads since May 2025; Marketplace needs 10 active workspaces | up to ~10 weeks for Marketplace (stated max) |
+| Slack | Moderate | Unlisted commercial apps are limited to 1 req/min on history reads (new installs since May 2025, existing installs since March 2026); Marketplace needs 10 active workspaces | up to ~10 weeks for Marketplace (stated max) |
 | HubSpot | Moderate | Unlisted apps capped at 25 installs; new apps must use the projects platform | listing review ~10 business days to first feedback |
 | Microsoft Outlook | Moderate | Default tenant consent policy blocks users from consenting to Mail.Read, so customer admins must approve | per customer, plus publisher verification |
 | X | Moderate | No review, but pay-per-use API credits and no free tier | none once paying |
@@ -57,6 +57,14 @@ So the guide's job is to answer, in this order: **how bad is it, how long, what 
 ## Verification
 
 See `/method` (data in `data/verification.json`). An independent verifier agent that didn't write the guides re-checked a sample of high-stakes claims (review triggers, caps, costs, token lifetimes) against primary sources. Corrections were applied to the guides and are listed with the reason.
+
+**Result: 31 claims checked. 24 confirmed, 5 corrected, 2 couldn't be verified.** The corrections show why the labels matter:
+
+- **Slack**: the guide said existing installs were exempt from the 2025 rate limit for unlisted apps. Slack's changelog says it applies to existing installs from March 3, 2026.
+- **Salesforce**: the guide said the first AppExchange security-review stage takes "1–2 weeks". Salesforce says 1–2 days.
+- **Gmail**: a CASA cost range was labelled *documented*. Google publishes no prices, so it's now *reported*, with vendor figures.
+- **Salesforce and Notion**: two claims were over-labelled (*tested* → *documented*, *documented* → *reported*).
+- **Couldn't verify**: two Salesforce policy changes (Salesforce's help pages returned 403 to agents). Both are now *reported* and listed under the guide's uncertainties.
 
 ## Limitations
 

@@ -42,10 +42,11 @@
           "title": "Decide: Local External Client App vs packaged ECA vs legacy Connected App",
           "detail": "Pick Local if only your own org (or a single customer org where you create the app yourself) will connect. Pick Packaged (2GP managed package) if users from many customer orgs will connect. A Local ECA 'exists only in the org where it's created', and you can't promote a Local app to Packaged later. A legacy Connected App can still authenticate users of any org, but since Spring '26 you can't create new ones without a Salesforce Support exception.",
           "owner": "human",
-          "evidence": "documented",
+          "evidence": "reported",
           "sourceIds": [
             "s3",
-            "s4"
+            "s4",
+            "s11"
           ]
         }
       ]
@@ -140,7 +141,7 @@
       "steps": [
         {
           "title": "Join the Partner Program and submit for security review",
-          "detail": "Join the Salesforce Partner Program, create a listing in the Partner Console, and submit the managed package along with scanner reports (Code Analyzer, plus a DAST scan of your external endpoints) and documentation. Salesforce gives these stage durations: about 1–2 weeks for operations to check the submission, 3–4 weeks for the first test, and 2–3 weeks per resubmission. Only paid and freemium listings pay a review fee.",
+          "detail": "Join the Salesforce Partner Program, create a listing in the Partner Console, and submit the managed package along with scanner reports (Code Analyzer, plus a DAST scan of your external endpoints) and documentation. Salesforce gives these stage durations: about 1–2 days for Security Review Operations to check the submission is complete, 3–4 weeks for the first test, and 2–3 weeks per resubmission. Only paid and freemium listings pay a review fee.",
           "owner": "human",
           "evidence": "documented",
           "sourceIds": [
@@ -306,11 +307,12 @@
       "Customer admins can set IP Relaxation to enforce IP ranges, which breaks agents running on cloud IPs.",
       "OAuth username-password flow is being retired; use web-server (authorization code) flow for end users."
     ],
-    "evidence": "tested",
+    "evidence": "documented",
     "sourceIds": [
       "s10",
       "s2",
-      "s3"
+      "s3",
+      "s12"
     ]
   },
   "blockers": [
@@ -387,7 +389,8 @@
     "Exact enforcement scope of the Sept 2025 uninstalled-app restriction (which profiles, whether Developer Edition orgs are affected, whether it applies to packaged ECAs). Sources are vendor support pages, not Salesforce release notes.",
     "Whether Composio's managed Salesforce app is a legacy Connected App and therefore still subject to customer admin installation/approval. It likely is (inferred), but this is not stated.",
     "AppExchange security review fee: sources conflict (older Salesforce doc says $2,550 + $150 listing; third-party says $999); Salesforce's stage durations are documented but real-world totals are only reported.",
-    "Propagation delay (2–10 min) is widely reported but we did not time it ourselves."
+    "Propagation delay (2–10 min) is widely reported but we did not time it ourselves.",
+    "The Spring '26 Connected App creation lock is stated by vendor docs (e.g. Striim) and by Salesforce developer-doc snippets seen in search results, but the cited Salesforce blog (s3) does not state it and Salesforce docs returned 403 to the verifier; 'you can't promote Local to Packaged' was not found in any primary source."
   ],
   "sources": [
     {
@@ -449,6 +452,18 @@
       "title": "Live probe: login.salesforce.com OpenID configuration and authorize/token endpoints",
       "url": "https://login.salesforce.com/.well-known/openid-configuration",
       "kind": "setup_attempt"
+    },
+    {
+      "id": "s11",
+      "title": "Striim docs – Salesforce connected apps and external client apps (Spring '26 creation lock)",
+      "url": "https://striim.com/docs/en/salesforce-connected-apps-and-external-client-apps.html",
+      "kind": "community"
+    },
+    {
+      "id": "s12",
+      "title": "Salesforce Packaging Guide – Manage OAuth access policies for a connected app (refresh token policy)",
+      "url": "https://developer.salesforce.com/docs/atlas.en-us.packagingGuide.meta/packagingGuide/connected_app_manage_oauth.htm",
+      "kind": "official_docs"
     }
   ],
   "meta": {
@@ -459,7 +474,9 @@
       "curl of /services/oauth2/authorize with a fake client_id returned HTTP 400 'error=invalid_client_id&error_description=client identifier invalid'. The same error came back from the token endpoint on both login.salesforce.com and test.salesforce.com. This is also the symptom of an app that hasn't propagated yet.",
       "Corrected a common belief: a newly created Salesforce OAuth app (a Local External Client App) does NOT work for users of other orgs the way a Connected App did. Multi-tenant SaaS needs a packaged ECA installed per customer org.",
       "Corrected the first assumption that Connected Apps are still the default. Since Spring '26, creating new Connected Apps is disabled by default in all orgs (reported by multiple sources; the official Salesforce blog says ECAs are now 'the primary way').",
-      "Could not load help.salesforce.com or developer.salesforce.com/docs/platform pages (403 or JS-only), so exact ECA menu labels are evidence=reported."
+      "Could not load help.salesforce.com or developer.salesforce.com/docs/platform pages (403 or JS-only), so exact ECA menu labels are evidence=reported.",
+      "Verifier corrected: AppExchange security review stage durations. Salesforce's 'How the AppExchange Security Review Works' page (indexed text; the page itself returns 403 to fetchers) gives 1–2 days, not 1–2 weeks, for Security Review Operations to check the submission; 3–4 weeks first test and 2–3 weeks per resubmission are confirmed. Also downgraded the Local/Packaged/Connected-App decision step to 'reported' (the cited Salesforce blog does not state the Spring '26 creation lock) and the technical block from 'tested' to 'documented' (token lifetimes and refresh policy were not observed).",
+      "Verifier confirmed against Salesforce's connected-app OAuth policy docs: the default Refresh Token Policy is 'Refresh token is valid until revoked'. The Sept 2025 uninstalled-connected-app restriction is corroborated only by vendor pages (admin.salesforce.com blog returned 403), so it stays 'reported'."
     ]
   }
 }

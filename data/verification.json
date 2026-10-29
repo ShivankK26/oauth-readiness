@@ -1,0 +1,223 @@
+{
+  "checkedAt": "2026-10-29",
+  "method": "Two independent verifier agents, which did not write the guides, each re-checked 3–4 high-stakes claims per guide (review triggers, caps, costs, token lifetimes, policy-change dates) against primary sources and fixed the guides where they were wrong.",
+  "claims": [
+    {
+      "guide": "gmail",
+      "claim": "CASA Letter of Validation: 'documented', roughly $540–$4,500 depending on lab and tier",
+      "verdict": "corrected",
+      "finding": "Google's CASA page confirms an annual assessment for restricted scopes but gives no prices; $4,500 upper bound not found. Downgraded to 'reported' and restated vendor figures (TAC Tier 2 $540–$720, Tier 3 ~$3,600; Leviathan Tier 2 $3,000).",
+      "sourceUrl": "https://support.google.com/cloud/answer/13465431"
+    },
+    {
+      "guide": "notion",
+      "claim": "Refresh rotates both tokens, so lost writes or concurrent refreshes cause invalid_grant (documented)",
+      "verdict": "corrected",
+      "finding": "Notion documents that refresh returns a new access and refresh token but not old-token invalidation or invalid_grant; requirement downgraded to 'reported' and the Nango report (s9) cited.",
+      "sourceUrl": "https://developers.notion.com/reference/refresh-a-token"
+    },
+    {
+      "guide": "salesforce",
+      "claim": "Security review stages: ~1–2 weeks operations check, 3–4 weeks first test, 2–3 weeks per resubmission",
+      "verdict": "corrected",
+      "finding": "Salesforce's page (indexed text; 403 to direct fetch) gives 1–2 days for Security Review Operations to verify the submission, not 1–2 weeks; guide text fixed, other stages confirmed.",
+      "sourceUrl": "https://developer.salesforce.com/docs/atlas.en-us.packagingGuide.meta/packagingGuide/security_review_how_it_works.htm"
+    },
+    {
+      "guide": "salesforce",
+      "claim": "Refresh tokens are valid until revoked by default; technical block marked 'tested'",
+      "verdict": "corrected",
+      "finding": "Default policy 'Refresh token is valid until revoked' is confirmed in Salesforce connected-app OAuth policy docs, but token lifetimes were never observed, so technical evidence downgraded from 'tested' to 'documented' and the Salesforce doc added as s12.",
+      "sourceUrl": "https://developer.salesforce.com/docs/atlas.en-us.packagingGuide.meta/packagingGuide/connected_app_manage_oauth.htm"
+    },
+    {
+      "guide": "slack",
+      "claim": "Unlisted commercial apps get Tier 1 (1 req/min, 15 objects) on conversations.history/replies; existing installs unaffected",
+      "verdict": "corrected",
+      "finding": "1 req/min and 15 objects confirmed, but Slack's changelog says the limits 'will be applied to existing installations' of unlisted distributed apps on March 3, 2026. Updated reviewTrigger, phase step, gotcha and meta; added source and an uncertainty about enforcement.",
+      "sourceUrl": "https://api.slack.com/changelog/2026-02-real-time-search-api"
+    },
+    {
+      "guide": "salesforce",
+      "claim": "Since Spring '26 new Connected Apps can't be created without a Support exception (documented, citing Salesforce blog)",
+      "verdict": "unverifiable",
+      "finding": "The cited Salesforce blog only says ECAs are 'now the primary way'; the lock is stated by Striim vendor docs and Salesforce doc snippets in search, but Salesforce pages 403. Step downgraded to 'reported', Striim source added, uncertainty added.",
+      "sourceUrl": "https://www.salesforce.com/blog/architecting-inbound-governance-external-client-apps/"
+    },
+    {
+      "guide": "salesforce",
+      "claim": "Uninstalled-connected-app restriction enforced since early Sept 2025 unless user has 'Approve Uninstalled Connected Apps' or 'Use Any API Client'",
+      "verdict": "unverifiable",
+      "finding": "Salesforce Admin blog returned 403; multiple vendor pages corroborate (Sept 2025, both permissions). Already labelled 'reported' and in uncertainties, so no change.",
+      "sourceUrl": "https://admin.salesforce.com/blog/2025/get-ready-for-changes-to-connected-app-usage-restrictions"
+    },
+    {
+      "guide": "github",
+      "claim": "Wildcard callback matching is default-on for apps that had a single callback URL before Aug 3, 2026",
+      "verdict": "confirmed",
+      "finding": "GitHub's Authorizing OAuth apps page says apps with a single callback URL prior to August 3, 2026 have wildcard matching enabled and recommends disabling it.",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps"
+    },
+    {
+      "guide": "github",
+      "claim": "New OAuth Apps allow up to 10 callback URLs and 'Expire user access tokens' is on by default",
+      "verdict": "confirmed",
+      "finding": "Creating an OAuth app states 'You can enter up to 10 callback URLs' and 'Expire user access tokens is enabled by default'; 100 OAuth apps per owner also confirmed.",
+      "sourceUrl": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app"
+    },
+    {
+      "guide": "github",
+      "claim": "User tokens last 8 h (28800), refresh tokens 6 months (15897600), single-use and rotating",
+      "verdict": "confirmed",
+      "finding": "Refreshing user access tokens gives exactly these values and says the used refresh token and old access token stop working.",
+      "sourceUrl": "https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens"
+    },
+    {
+      "guide": "github",
+      "claim": "OAuth app access restrictions are on by default for new orgs",
+      "verdict": "confirmed",
+      "finding": "GitHub: 'When you create a new organization, OAuth app access restrictions are enabled by default.'",
+      "sourceUrl": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data/about-oauth-app-access-restrictions"
+    },
+    {
+      "guide": "gmail",
+      "claim": "gmail.send is sensitive; gmail.compose, gmail.metadata, gmail.readonly, gmail.modify, mail.google.com are restricted; gmail.labels is basic",
+      "verdict": "confirmed",
+      "finding": "Gmail scopes page classifies gmail.send Sensitive, the other five Restricted, gmail.labels Non-sensitive.",
+      "sourceUrl": "https://developers.google.com/workspace/gmail/api/auth/scopes"
+    },
+    {
+      "guide": "gmail",
+      "claim": "100-user cap for unverified apps is lifetime per project and cannot be reset",
+      "verdict": "confirmed",
+      "finding": "Google: 'The user cap applies over the entire lifetime of the project, and it cannot be reset or changed'; quota is '100 new users in total'.",
+      "sourceUrl": "https://support.google.com/cloud/answer/15549945"
+    },
+    {
+      "guide": "gmail",
+      "claim": "Testing-mode refresh tokens expire after 7 days; limit of 100 refresh tokens per Google Account per client ID, oldest silently invalidated",
+      "verdict": "confirmed",
+      "finding": "OAuth2 overview states both: 7-day expiry for External/Testing unless only name/email/profile scopes, and 100 tokens per account per client with the oldest invalidated without warning.",
+      "sourceUrl": "https://developers.google.com/identity/protocols/oauth2"
+    },
+    {
+      "guide": "hubspot",
+      "claim": "Legacy public apps can no longer be created since 2026-06-23",
+      "verdict": "confirmed",
+      "finding": "Legacy apps overview: 'As of June 23, 2026, legacy public apps can no longer be created'; replacement is platform 2026.03 projects.",
+      "sourceUrl": "https://developers.hubspot.com/docs/apps/legacy-apps/overview"
+    },
+    {
+      "guide": "hubspot",
+      "claim": "Marketplace-distribution OAuth apps capped at 25 installs before listing (test accounts excluded); private 10; static 1; AUP required",
+      "verdict": "confirmed",
+      "finding": "Manage apps page states the 25 / 10 / 1 limits, excludes developer test accounts, and blocks non-test installs until the AUP is signed.",
+      "sourceUrl": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/manage-apps-in-hubspot"
+    },
+    {
+      "guide": "hubspot",
+      "claim": "Listing needs 3 active unaffiliated installs (30 days); initial review within 10 business days, ≤60 days after feedback",
+      "verdict": "confirmed",
+      "finding": "Listing requirements page states all three figures as written.",
+      "sourceUrl": "https://developers.hubspot.com/docs/apps/developer-platform/list-apps/listing-your-app/app-marketplace-listing-requirements"
+    },
+    {
+      "guide": "hubspot",
+      "claim": "Access tokens expire after 1800 s; developer test accounts expire after 90 days without API calls",
+      "verdict": "confirmed",
+      "finding": "OAuth quickstart says expires_in is 'currently 30 minutes' (1800); Test accounts doc confirms the 90-day inactivity expiry and manual/API renewal.",
+      "sourceUrl": "https://developers.hubspot.com/docs/apps/developer-platform/build-apps/authentication/oauth/oauth-quickstart-guide"
+    },
+    {
+      "guide": "notion",
+      "claim": "Marketplace listing review takes 5–10 business days; OAuth works without a listing",
+      "verdict": "confirmed",
+      "finding": "Marketplace FAQ: hear back 'within 5-10 business days' and the connection 'can be used via its OAuth flow without being listed'.",
+      "sourceUrl": "https://developers.notion.com/guides/get-started/marketplace-listing"
+    },
+    {
+      "guide": "notion",
+      "claim": "Installation scope (Any workspace / Selected workspaces only) is irreversible; only Any workspace is Marketplace-eligible",
+      "verdict": "confirmed",
+      "finding": "Public connections page: 'Installation scope is set once, at creation time, and can't be changed afterward'; only Any workspace is Marketplace eligible.",
+      "sourceUrl": "https://developers.notion.com/guides/get-started/public-connections"
+    },
+    {
+      "guide": "notion",
+      "claim": "Authorization guide says the Authorization URL 'populates after a public connection is submitted for review'",
+      "verdict": "confirmed",
+      "finding": "The caption exists verbatim in the Authorization guide; the conflict with the Marketplace FAQ is real and already listed in uncertainties.",
+      "sourceUrl": "https://developers.notion.com/guides/get-started/authorization"
+    },
+    {
+      "guide": "outlook",
+      "claim": "Microsoft-managed default consent policy blocks user consent for Mail.Read/ReadWrite/ReadBasic even for verified publishers; Mail.Send not excluded; only listed mail clients exempt",
+      "verdict": "confirmed",
+      "finding": "Policy (default for new tenants) excludes Mail.Read, Mail.ReadWrite, Mail.ReadBasic etc. with no verified-publisher carve-out; Mail.Send is not listed; exemption policy names Apple Mail, Spark, eM Client, Thunderbird, Android mail apps. MC1163922 rollout Oct–Nov 2025 confirmed.",
+      "sourceUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies"
+    },
+    {
+      "guide": "outlook",
+      "claim": "Refresh tokens last 90 days (24 h for SPA redirect URIs) and rotate on each use",
+      "verdict": "confirmed",
+      "finding": "Default lifetime 24 h for SPAs, 90 days for all other scenarios; refresh tokens replace themselves on every use.",
+      "sourceUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/refresh-tokens"
+    },
+    {
+      "guide": "outlook",
+      "claim": "Personal-account-enabled apps limited to two client secrets and 30 permissions per resource; no query strings or wildcards in redirect URIs",
+      "verdict": "confirmed",
+      "finding": "Validation table: max two client secrets and max 30 permissions per resource for AzureADandPersonalMicrosoftAccount; reply-url page disallows query params and wildcards for personal-account apps.",
+      "sourceUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/supported-accounts-validation"
+    },
+    {
+      "guide": "outlook",
+      "claim": "Publisher verification is free; unverified multi-tenant apps registered after 8 Nov 2020 can't get cross-tenant user consent under risk-based step-up consent",
+      "verdict": "confirmed",
+      "finding": "Overview states Microsoft doesn't charge for publisher verification and gives the November 8, 2020 rule as written.",
+      "sourceUrl": "https://learn.microsoft.com/en-us/entra/identity-platform/publisher-verification-overview"
+    },
+    {
+      "guide": "slack",
+      "claim": "Marketplace needs 10+ workspaces active in past 28 days; preliminary review up to 10 business days, functional review up to 10 weeks",
+      "verdict": "confirmed",
+      "finding": "Review guide states all three figures (6 weeks for resubmissions of published apps).",
+      "sourceUrl": "https://docs.slack.dev/slack-marketplace/slack-marketplace-review-guide"
+    },
+    {
+      "guide": "slack",
+      "claim": "With token rotation, access tokens expire after 12 h, refresh tokens single-use, rotation irreversible",
+      "verdict": "confirmed",
+      "finding": "Docs: 'always expire in 43,200 seconds', refresh tokens 'designed to be used once', rotation 'may not be turned off once it's turned on'.",
+      "sourceUrl": "https://docs.slack.dev/authentication/using-token-rotation"
+    },
+    {
+      "guide": "slack",
+      "claim": "PKCE GA 2026-03-30, self-serve, one-way, required for custom URI scheme redirects, makes app a public client",
+      "verdict": "confirmed",
+      "finding": "Changelog dated March 30, 2026 states each point.",
+      "sourceUrl": "https://docs.slack.dev/changelog/2026/03/30/pkce"
+    },
+    {
+      "guide": "x",
+      "claim": "Prices: $0.005 post read, $0.015 post create ($0.20 with URL), $0.010 user read, $0.010 DM event read, $0.015 DM sent, $0.001 owned read; 3M post reads/month cap",
+      "verdict": "confirmed",
+      "finding": "Pricing page lists the same figures (DM as 'DM Interaction: Create' $0.015) and the 3M Post reads per billing cycle cap before Enterprise.",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/pricing"
+    },
+    {
+      "guide": "x",
+      "claim": "Promo credits: $20 after first purchase plus up to $50 auto-recharge match, each expiring after 3 months",
+      "verdict": "confirmed",
+      "finding": "Free-credits page: $20 after first credit purchase, match up to $50 on first auto-recharge, both 'expire 3 months after they are granted'. Added this official page as a source (guide previously cited a third-party page).",
+      "sourceUrl": "https://docs.x.com/x-api/getting-started/free-credits"
+    },
+    {
+      "guide": "x",
+      "claim": "Authorization code valid 30 s; access tokens expire after 2 h; refresh token only with offline.access",
+      "verdict": "confirmed",
+      "finding": "OAuth 2.0 authorization-code page states the 30-second auth_code limit, two-hour access tokens, and refresh tokens only with offline.access.",
+      "sourceUrl": "https://docs.x.com/resources/fundamentals/authentication/oauth-2-0/authorization-code"
+    }
+  ]
+}

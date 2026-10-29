@@ -431,7 +431,8 @@
       "Tested: the v2.0 OpenID discovery document confirms the authorize/token endpoints but does not list code_challenge_methods_supported (PKCE support comes from docs, not the discovery doc).",
       "Corrected a first assumption: 'AdminConsentRequired: No' for delegated Mail.Read in the Graph reference is not the whole story. Since late 2025 the Microsoft-managed default consent policy excludes Mail.Read/ReadWrite/ReadBasic (plus Calendars, Files.Read.All, etc.) from user consent, even for verified publishers. Mail.Send is not excluded.",
       "Confirmed refresh token lifetime: 90 days by default, 24 hours for SPA redirect URIs.",
-      "Could not sign in to the Entra admin center or Partner Center (no credentials), so menu paths come from Microsoft Learn."
+      "Could not sign in to the Entra admin center or Partner Center (no credentials), so menu paths come from Microsoft Learn.",
+      "Verifier confirmed against learn.microsoft.com (manage-app-consent-policies, refresh-tokens, supported-accounts-validation, reply-url, publisher-verification-overview): Microsoft-managed default policy excludes Mail.Read/ReadWrite/ReadBasic (not Mail.Send) from user consent with only listed mail clients exempt; refresh tokens 90 days (24 h for SPA); personal-account apps max 2 client secrets and 30 permissions per resource; no query params/wildcards for personal-account apps; publisher verification is free."
     ]
   }
 }
