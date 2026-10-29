@@ -1,0 +1,310 @@
+{
+  "slug": "x",
+  "name": "X (Twitter)",
+  "website": "https://x.com",
+  "category": "Social media",
+  "oneLiner": "There is no app review and setup takes about 20 minutes, but X has no usable free tier: you prepay pay-per-use credits, and every read and post your end users' agents make is billed to you.",
+  "verdict": {
+    "difficulty": "moderate",
+    "activeEffort": "20–40 min",
+    "approvalWait": "None for standard pay-per-use access (self-serve). X does not document or require an app review. Enterprise and free 'public utility' access are case-by-case, with undocumented wait times.",
+    "timeToFirstConnection": "About 30 min once a payment card is added and credits are purchased",
+    "timeToProduction": "Same day. Any X user can authorize your app immediately. The limits are cost and rate limits, not approval.",
+    "reviewRequired": "none",
+    "reviewTrigger": "No scope triggers review. Enterprise volume (>3M post reads/month) or free public-utility access needs a sales or case-by-case decision.",
+    "cost": "Pay-per-use credits, no subscription. Sample prices: $0.005 per post read, $0.015 per post created ($0.20 if it contains a URL), $0.010 per user read, $0.010 per DM event read, $0.015 per DM sent, $0.001 per owned read. One-time promo credits are up to $20 + $50. The cap is 3M post reads/month before Enterprise.",
+    "evidence": "documented",
+    "sourceIds": ["s2", "s5"]
+  },
+  "fastPath": "Composio does not offer a managed OAuth app for X. Both the TWITTER and X_MCP toolkits are listed under 'Bring your own OAuth app' (s1). The fastest route is to create an app in console.x.com and enable OAuth 2.0 as a confidential 'Web App'. Paste the Client ID and Secret into a Composio auth config with Composio's callback URL, buy a small credit balance (for example $5–10), and set a spending limit before you connect a test account.",
+  "phases": [
+    {
+      "title": "Developer account and billing",
+      "duration": "10–15 min",
+      "isWait": false,
+      "steps": [
+        {
+          "title": "Sign in to the Developer Console and accept the agreement",
+          "detail": "Go to https://console.x.com and sign in with the X account that will own the app. Use a company account, not a personal one, because you can't transfer app ownership easily. Accept the Developer Agreement and Policy, then complete the profile by describing your use case: an AI agent that acts on behalf of users who connect via OAuth 2.0. The old developer.x.com portal now redirects to login.",
+          "owner": "human",
+          "evidence": "documented",
+          "sourceIds": ["s3"]
+        },
+        {
+          "title": "Add a payment card, buy credits and set a spending limit",
+          "detail": "In the console's billing/credits section, add a credit or debit card and purchase credits. Turn on auto-recharge with a threshold if you want, and set a per-billing-cycle spending limit. Requests are blocked when your balance reaches zero or you hit the limit. Without credits, API calls fail even though OAuth works.",
+          "owner": "human",
+          "evidence": "documented",
+          "sourceIds": ["s2"]
+        }
+      ]
+    },
+    {
+      "title": "Create the app and configure OAuth 2.0",
+      "duration": "10–20 min",
+      "isWait": false,
+      "steps": [
+        {
+          "title": "Create an app",
+          "detail": "On the console dashboard, click 'New App'. Enter the app name (users see it on the consent screen), a description and a use case. The console shows the API Key/Secret, Bearer Token and owner Access Token/Secret once. Save them, because regenerating them invalidates the old values.",
+          "owner": "either",
+          "evidence": "documented",
+          "sourceIds": ["s3"]
+        },
+        {
+          "title": "Set up User authentication settings",
+          "detail": "In the app's settings, open 'User authentication settings' > Set up. Set App permissions to 'Read and write' if the agent posts, or 'Read and write and Direct message' if it needs DMs. Set Type of App to 'Web App, Automated App or Bot' (confidential client, gets a Client Secret). Use 'Native App' or 'Single page App' only for public clients with no secret. Under App info, enter the Callback URI / Redirect URL (exact match, for example https://backend.composio.dev/api/v3/toolkits/auth/callback) and a Website URL (required). Terms and privacy URLs are optional. Save.",
+          "owner": "either",
+          "evidence": "reported",
+          "sourceIds": ["s4", "s7"]
+        },
+        {
+          "title": "Copy the OAuth 2.0 Client ID and Client Secret",
+          "detail": "After you save, the console shows the OAuth 2.0 Client ID and Client Secret. The secret is shown once. These are separate from the OAuth 1.0a API Key/Secret, so don't mix them up.",
+          "owner": "human",
+          "evidence": "documented",
+          "sourceIds": ["s3", "s4"]
+        }
+      ]
+    },
+    {
+      "title": "Test the flow and production hardening",
+      "duration": "15–30 min",
+      "isWait": false,
+      "steps": [
+        {
+          "title": "Run the authorization code + PKCE flow",
+          "detail": "Redirect to https://x.com/i/oauth2/authorize?response_type=code&client_id=...&redirect_uri=...&scope=tweet.read%20users.read%20tweet.write%20offline.access&state=...&code_challenge=...&code_challenge_method=S256. Exchange the code within 30 seconds at POST https://api.x.com/2/oauth2/token. Confidential clients send HTTP Basic auth (client_id:client_secret), plus grant_type=authorization_code, code, redirect_uri and code_verifier.",
+          "owner": "agent",
+          "evidence": "documented",
+          "sourceIds": ["s4"]
+        },
+        {
+          "title": "Implement refresh",
+          "detail": "Access tokens last 2 hours. Request offline.access to get a refresh token, then refresh with grant_type=refresh_token at the same token URL. Store the newest refresh token after each refresh, because refresh tokens should be treated as rotating.",
+          "owner": "agent",
+          "evidence": "documented",
+          "sourceIds": ["s4"]
+        },
+        {
+          "title": "Budget and rate-limit guardrails for agents",
+          "detail": "Track spend with the usage endpoint and console. Cap per-user agent actions: POST /2/tweets allows 100 per user per 15 min and 10,000 per app per 24 h, and DM sends allow 15 per user per 15 min and 1,440 per user per 24 h. Handle HTTP 429 using the x-rate-limit-reset header, and dedupe repeated reads (X bills a resource once per 24 h UTC window, as a 'soft guarantee').",
+          "owner": "agent",
+          "evidence": "documented",
+          "sourceIds": ["s2", "s6"]
+        }
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "item": "X account that owns the developer app",
+      "detail": "A verified-email, preferably company-owned, X account. It accepts the Developer Agreement and owns the billing.",
+      "blocking": true,
+      "evidence": "documented",
+      "sourceIds": ["s3"]
+    },
+    {
+      "item": "Payment card and prepaid credits",
+      "detail": "Pay-per-use is the default. New developers get no free monthly quota, only one-time promo credits of up to $20 after the first purchase plus up to a $50 auto-recharge match, each expiring after 3 months. API calls are blocked at a zero or negative balance.",
+      "blocking": true,
+      "evidence": "documented",
+      "sourceIds": ["s2", "s8"]
+    },
+    {
+      "item": "Exact callback URL",
+      "detail": "redirect_uri must exactly match a Callback URI registered in User authentication settings.",
+      "blocking": true,
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    },
+    {
+      "item": "Website URL",
+      "detail": "The User authentication settings form requires a Website URL.",
+      "blocking": true,
+      "evidence": "reported",
+      "sourceIds": ["s7"]
+    },
+    {
+      "item": "App permission level matching your scopes",
+      "detail": "DM scopes need the 'Read and write and Direct message' app permission, and write scopes need 'Read and write'. If you change permissions, existing users must re-authorize to get the new access.",
+      "blocking": false,
+      "evidence": "reported",
+      "sourceIds": ["s7"]
+    },
+    {
+      "item": "Compliance with X Developer Policy (automation rules)",
+      "detail": "Agents that post or DM must follow X's automation and spam rules. Violations can suspend the app or the users' accounts.",
+      "blocking": false,
+      "evidence": "inferred",
+      "sourceIds": ["s3"]
+    }
+  ],
+  "scopes": [
+    {
+      "scope": "tweet.read",
+      "purpose": "Read posts (timeline, search, lookups) as the user",
+      "tier": "basic",
+      "triggersReview": false,
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    },
+    {
+      "scope": "users.read",
+      "purpose": "Read user profiles, including /2/users/me (needed alongside tweet.read for most calls)",
+      "tier": "basic",
+      "triggersReview": false,
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    },
+    {
+      "scope": "tweet.write",
+      "purpose": "Post, reply, quote and delete posts on the user's behalf",
+      "tier": "sensitive",
+      "triggersReview": false,
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    },
+    {
+      "scope": "offline.access",
+      "purpose": "Get a refresh token. Note the dot: it is offline.access, not offline_access.",
+      "tier": "basic",
+      "triggersReview": false,
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    },
+    {
+      "scope": "dm.read / dm.write",
+      "purpose": "Read and send Direct Messages; requires the 'Read and write and Direct message' app permission",
+      "tier": "sensitive",
+      "triggersReview": false,
+      "evidence": "documented",
+      "sourceIds": ["s4", "s7"]
+    },
+    {
+      "scope": "media.write",
+      "purpose": "Upload media to attach to posts",
+      "tier": "basic",
+      "triggersReview": false,
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    },
+    {
+      "scope": "users.email",
+      "purpose": "Read the authenticated user's email address",
+      "tier": "sensitive",
+      "triggersReview": false,
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    },
+    {
+      "scope": "like.write / follows.write / bookmark.write",
+      "purpose": "Like, follow and bookmark actions on the user's behalf",
+      "tier": "sensitive",
+      "triggersReview": false,
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    }
+  ],
+  "technical": {
+    "consoleUrl": "https://console.x.com",
+    "authorizeUrl": "https://x.com/i/oauth2/authorize",
+    "tokenUrl": "https://api.x.com/2/oauth2/token",
+    "pkce": "required: code_challenge and code_challenge_method (S256 or plain) are required authorize parameters for all client types",
+    "refreshTokens": "Access tokens expire after 2 hours. A refresh token is issued only if offline.access is requested. Refresh with grant_type=refresh_token at the token URL. Confidential clients authenticate with HTTP Basic, and public clients send client_id in the body. Authorization codes expire 30 seconds after issue.",
+    "redirectUriRules": "Exact-match against the Callback URIs registered in User authentication settings (multiple allowed).",
+    "gotchas": [
+      "The scope is 'offline.access' (with a dot). 'offline_access' will not return a refresh token.",
+      "The authorization code is valid for only 30 seconds, so exchange it immediately.",
+      "OAuth works without credits, but every API call fails once your prepaid balance hits zero. Cost, not approval, is the real gate.",
+      "OAuth 2.0 Client ID/Secret are different from the OAuth 1.0a API Key/Secret shown when the app is created. Credentials are shown once.",
+      "The authorize page is a JavaScript app that returns HTTP 200 even for a bad client_id, so errors only show up in the browser.",
+      "Some docs samples show scopes like account.follows.read that are not in the scope table. Use the scope table names."
+    ],
+    "evidence": "documented",
+    "sourceIds": ["s4", "s2", "s9"]
+  },
+  "blockers": [
+    {
+      "blocker": "No credits / spending limit reached",
+      "symptom": "OAuth succeeds but API calls are rejected. The console shows a zero or negative balance or a reached spending limit.",
+      "resolution": "Buy credits or enable auto-recharge, and raise the per-cycle spending limit. Budget per connected user.",
+      "evidence": "documented",
+      "sourceIds": ["s2"]
+    },
+    {
+      "blocker": "Per-user and per-app rate limits",
+      "symptom": "HTTP 429 Too Many Requests. Check the x-rate-limit-reset header. Typical triggers are DM endpoints (15 per 15 min per user) or the 10,000 posts per 24 h app cap.",
+      "resolution": "Queue and back off by x-rate-limit-reset, batch reads, and cap agent loops. Above 3M post reads per month, Enterprise is required.",
+      "evidence": "documented",
+      "sourceIds": ["s6", "s2"]
+    },
+    {
+      "blocker": "Invalid client or redirect mismatch",
+      "symptom": "The token endpoint returns {\"error\":\"invalid_client\",\"error_description\":\"Value passed for the client id was invalid.\"}, or the browser consent page shows an error for an unregistered callback.",
+      "resolution": "Use the OAuth 2.0 Client ID (not the API Key), make sure the callback URI matches exactly, and use HTTP Basic auth for confidential clients.",
+      "evidence": "tested",
+      "sourceIds": ["s9", "s4"]
+    },
+    {
+      "blocker": "No refresh token returned",
+      "symptom": "The token response has no refresh_token, and the agent loses access after 2 hours.",
+      "resolution": "Add offline.access to the requested scopes and have the user re-authorize.",
+      "evidence": "documented",
+      "sourceIds": ["s4"]
+    },
+    {
+      "blocker": "DM or write calls forbidden",
+      "symptom": "HTTP 403 on DM or post endpoints even though the scopes were requested.",
+      "resolution": "Set App permissions to 'Read and write and Direct message' in User authentication settings, then have users re-authorize.",
+      "evidence": "reported",
+      "sourceIds": ["s7"]
+    }
+  ],
+  "agentHandoff": {
+    "agentCan": [
+      "Fill in the New App and User authentication settings forms (app type, callback URI, website URL, permissions) in a logged-in console session",
+      "Build the authorize URL with PKCE, exchange codes within 30 s, refresh tokens and persist rotated refresh tokens",
+      "Monitor credit balance and usage, enforce per-user budgets and rate-limit backoff",
+      "Configure the Composio auth config with the Client ID and Secret"
+    ],
+    "humanMust": [
+      "Own and log in to the X account (including 2FA), and accept the Developer Agreement and Policy",
+      "Add a payment card, buy credits, and set spending limits and auto-recharge",
+      "Copy and store the one-time-displayed Client Secret and keys",
+      "Decide cost exposure per end user, and talk to X sales if Enterprise volume is needed"
+    ]
+  },
+  "uncertainties": [
+    "Exact current console field labels ('User authentication settings', 'Type of App', 'Website URL') come from community guides and older docs. console.x.com is a JS app we could not inspect without logging in.",
+    "Whether any free tier remains for new developers in late Oct 2026. Official pricing describes only pay-per-use plus promo credits, and third-party sources say the free tier ended Feb 2026 except for case-by-case 'public utility' apps.",
+    "Legacy Basic and Pro migration dates (Basic ~June 1, 2026; Pro ~Sept 1, 2026) come only from third-party trackers.",
+    "Whether refresh tokens rotate on every use is widely reported but not explicit in the docs we read.",
+    "Whether rate limits differ between pay-per-use and Enterprise. The rate-limit page does not tie limits to plans.",
+    "Whether X can retroactively restrict apps that automate posting/DMs on behalf of many users. The policy applies, but enforcement is opaque."
+  ],
+  "sources": [
+    { "id": "s1", "title": "Composio – Managed auth toolkits", "url": "https://docs.composio.dev/toolkits/managed-auth", "kind": "other" },
+    { "id": "s2", "title": "X API – Pricing (pay-per-usage)", "url": "https://docs.x.com/x-api/getting-started/pricing", "kind": "official_docs" },
+    { "id": "s3", "title": "X API – Getting access", "url": "https://docs.x.com/x-api/getting-started/getting-access", "kind": "official_docs" },
+    { "id": "s4", "title": "X – OAuth 2.0 Authorization Code Flow with PKCE", "url": "https://docs.x.com/resources/fundamentals/authentication/oauth-2-0/authorization-code", "kind": "official_docs" },
+    { "id": "s5", "title": "Gigazine – X API switches to pay-per-use (Feb 2026)", "url": "https://gigazine.net/gsc_news/en/20260209-x-api-pay-per-use", "kind": "community" },
+    { "id": "s6", "title": "X API – Rate limits", "url": "https://docs.x.com/x-api/fundamentals/rate-limits", "kind": "official_docs" },
+    { "id": "s7", "title": "Elfsight – How to get X (Twitter) API key in 2026", "url": "https://elfsight.com/blog/how-to-get-x-twitter-api-key-in-2026", "kind": "community" },
+    { "id": "s8", "title": "OpenTweet – X API free credits (updated Oct 2026)", "url": "https://opentweet.io/answers/x-api-free-credits", "kind": "community" },
+    { "id": "s9", "title": "Live probe: X authorize and token endpoints with a fake client", "url": "https://api.x.com/2/oauth2/token", "kind": "setup_attempt" }
+  ],
+  "meta": {
+    "origin": "curated",
+    "reviewedAt": "2026-10-29",
+    "verificationNotes": [
+      "POST https://api.x.com/2/oauth2/token with a fake client_id (body and Basic auth) returned {\"error\":\"invalid_client\",\"error_description\":\"Value passed for the client id was invalid.\"}.",
+      "GET https://x.com/i/oauth2/authorize with a fake client_id returned HTTP 200 (a JS app), so you can't see the error server-side. twitter.com/i/oauth2/authorize 301-redirects to x.com.",
+      "https://console.x.com responds 200. developer.x.com/en/portal/dashboard 307-redirects to X login.",
+      "GET https://api.x.com/2/users/me without a token returned 401 Unauthorized.",
+      "Corrected the brief's scope name: X uses 'offline.access' (dot), not 'offline_access'.",
+      "Corrected the brief's tier list: the official pricing page no longer describes Free/Basic/Pro tiers. Pay-per-use credits are the model, with Enterprise above 3M post reads/month.",
+      "Corrected the assumption that Composio has a managed X app: the managed-auth page lists TWITTER and X_MCP as bring-your-own-app."
+    ]
+  }
+}
