@@ -2,7 +2,7 @@
 
 **Will your OAuth app take an hour or six weeks?** OAuth Readiness gives developers building AI agents a shareable, evidence-labelled guide for creating an OAuth app with a provider and getting it approved: effort, approval wait, what triggers review, what will block you, and which steps an agent can do for you.
 
-- **Library**: curated guides for apps with deliberately different setup paths (GitHub, Notion, Slack, HubSpot, Salesforce, Microsoft Outlook, Gmail, X).
+- **Library**: 8 curated guides for apps with deliberately different setup paths, from instant (GitHub, Notion) to a security audit (Gmail): Slack, HubSpot, Microsoft Outlook, Salesforce and X in between.
 - **Live generation**: type any app name or website. An agent researches the provider's docs, probes its real OAuth endpoints and writes a guide in 1–3 minutes, with a share link.
 - **Method page** (`/method`): the evidence labels, how the agents work, and a verification log of claims that were confirmed, corrected or couldn't be verified.
 
@@ -23,14 +23,18 @@ A developer's integration has three layers: **the provider** (Google, Slack…),
 
 The hard part isn't the OAuth code. It's the **variance between providers**, which developers can't see upfront:
 
-| | Self-serve? | Gate before external users | Typical wait |
+What the research found (see each guide for sources and evidence labels):
+
+| App | Verdict | The gate that matters | Wait |
 |---|---|---|---|
-| GitHub, Notion | yes | none / light | minutes |
-| Slack, HubSpot | yes | marketplace listing (optional but consequential) | days–weeks |
-| Microsoft | yes | publisher verification + customer admin consent | days, plus per-customer |
-| Salesforce | yes | customer admins must allow the app | per-customer |
-| Gmail | yes | restricted-scope verification + annual CASA audit | weeks–months |
-| X | paid tier | API access tier | instant once you pay |
+| GitHub | Easy | None from GitHub; customer org owners may restrict third-party apps | none |
+| Notion | Easy | None to use OAuth; Marketplace listing optional | none (listing 5–10 business days) |
+| Slack | Moderate | Unlisted commercial apps are rate-limited on history reads since May 2025; Marketplace needs 10 active workspaces | up to ~10 weeks for Marketplace (stated max) |
+| HubSpot | Moderate | Unlisted apps capped at 25 installs; new apps must use the projects platform | listing review ~10 business days to first feedback |
+| Microsoft Outlook | Moderate | Default tenant consent policy blocks users from consenting to Mail.Read, so customer admins must approve | per customer, plus publisher verification |
+| X | Moderate | No review, but pay-per-use API credits and no free tier | none once paying |
+| Salesforce | Hard | Customer orgs must install or allow the app (2025 change); new apps are External Client Apps | per customer; AppExchange review ~4–8+ weeks |
+| Gmail | Very hard | Restricted scopes (read/modify/compose) need verification plus an annual CASA security assessment; send-only avoids it | reportedly 4–8 weeks |
 
 So the guide's job is to answer, in this order: **how bad is it, how long, what will block me, and what can I do today.**
 
