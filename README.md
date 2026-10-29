@@ -18,7 +18,7 @@ npx tsx scripts/validate.ts  # validate all guides against the schema + source r
 npx tsx --env-file=.env.local scripts/live-test.ts "Calendly" out.json   # one live generation from the CLI
 ```
 
-Deploy: import the repo into Vercel and set `ANTHROPIC_API_KEY`. Live generation runs up to 300s per request (`maxDuration`). Optional: `ANTHROPIC_MODEL` (default `claude-opus-5-5`).
+Deploy: import the repo into Vercel and set `ANTHROPIC_API_KEY`. Recommended: create a private Blob store (`vercel blob create-store <name> --access private`) so live runs survive dropped connections. Optional: `ANTHROPIC_MODEL` (default `claude-opus-5-5`).
 
 ## The problem as I understood it
 
@@ -49,7 +49,8 @@ So the guide's job is to answer, in this order: **how bad is it, how long, what 
 4. **One schema for curated and live guides.** A zod schema (`src/lib/schema.ts`) is the contract. Curated research agents wrote JSON against it (validated by `scripts/validate.ts`, which also checks every cited source id exists). The live agent's writing step uses Claude structured outputs with the same schema, so live and curated guides render identically.
 5. **Research, then write.** The live agent runs in two calls. (a) Research: Claude with web search, web fetch and a custom `probe_endpoint` tool, which makes a real unauthenticated request to the authorize URL or console and records the status and error text. That's where `tested` evidence comes from. (b) Writing: a second call that turns the research notes into guide JSON, told to downgrade evidence when in doubt. The output is validated against the same zod schema, and validation errors are sent back for one repair turn. I first used constrained structured outputs here, but the guide schema is too deeply nested for the decoding grammar ("compiled grammar is too large"), so validate-and-repair it is. Splitting the calls also keeps the evidence rules in one focused prompt.
 6. **Progress, not just reading.** Steps are a checklist with progress saved in the browser. "Copy as Markdown" drops the guide into a ticket, PR or Notion page with checkboxes and source links.
-7. **Shareable without a database.** Live guides are compressed into the URL fragment (`/g#…`). No storage, no credentials, and the link always shows exactly the version that was generated. Curated guides have stable URLs (`/apps/<slug>`).
+7. **Live runs are short, resumable steps.** A run is 3–6 requests, not one long response: each request does one research turn or one writing attempt (30–70s), streams its progress, and ends with the conversation state for the next step. The state is HMAC-signed, so the endpoint can't be used as a general Claude proxy. I got here the hard way. On the deployed site, a single 3-minute HTTP/2 stream was cut at 56–187s on my network, while the same request over HTTP/1.1 finished. So each finished step is also saved to a private Vercel Blob. If a stream drops, the browser polls for that step's result instead of re-running it. This also takes total run time out from under the 300s function limit.
+8. **Shareable without a database.** Live guides are compressed into the URL fragment (`/g#…`). No storage, no credentials, and the link always shows exactly the version that was generated. Curated guides have stable URLs (`/apps/<slug>`).
 
 ### Scope I chose not to do
 
@@ -71,14 +72,15 @@ See `/method` (data in `data/verification.json`). An independent verifier agent 
 
 ### Live generation, tested end to end
 
-Calendly (from the CLI) and Linear (through the deployed UI) were generated live. Calendly took 170s: 134s research with 9 probes and ~15 searches, 36s writing. The guide validated on the first try, with no dangling source ids. Its verdict: easy, PKCE (S256) required, refresh tokens rotate on every use, Composio managed app available. It listed 8 open uncertainties, including access-token lifetime and rate limits found only in third-party sources.
+Calendly and Linear were generated live from the CLI, Linear through the deployed API, and Airtable through the stepped UI. Calendly took 170s: 134s research with 9 probes and ~15 searches, 36s writing. The guide validated on the first try, with no dangling source ids. Its verdict: easy, PKCE (S256) required, refresh tokens rotate on every use, Composio managed app available. It listed 8 open uncertainties, including access-token lifetime and rate limits found only in third-party sources.
 
 ## Limitations
 
 - No provider approval was carried through to completion, so wait times are reported or inferred and labelled as such.
 - Console UI field names come from docs and can drift.
 - Live guides aren't put through the verifier pass. Their quality depends on what the provider documents publicly, and they show their own uncertainties.
-- Live generation needs an Anthropic API key and costs roughly the price of one long Claude agent session per guide. There's no rate limiting beyond input length.
+- Live generation needs an Anthropic API key and costs roughly the price of one long Claude agent session per guide. There's no rate limiting beyond input length. When credits run out, the generator says so and the curated library keeps working.
+- Saved step results stay in the Blob store. They hold public-docs research only, under unguessable ids, but nothing deletes them yet.
 
 ## Structure
 

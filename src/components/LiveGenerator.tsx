@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import type { AgentEvent } from "@/lib/agent";
+import type { AgentEvent, StepEvent, StoredStep } from "@/lib/agent";
 import type { Guide } from "@/lib/schema";
 import { encodeGuide } from "@/lib/format";
 import { GuideView } from "./GuideView";
@@ -24,6 +24,73 @@ export function LiveGenerator() {
   const started = useRef(false);
   const abort = useRef<AbortController | null>(null);
 
+  /** Applies one streamed event. Returns the step's outcome once its final event arrives. */
+  function apply(e: StepEvent): { next?: string; done?: boolean } | null {
+    if (e.type === "step") return null;
+    if (e.type === "next") return { next: e.state };
+    if (e.type === "note") setNotes((n) => n + e.text);
+    else if (e.type === "guide") {
+      setGuide(e.guide);
+      return { done: true };
+    } else {
+      setLog((l) => [...l, e]);
+      if (e.type === "error") return { done: true };
+    }
+    return null;
+  }
+
+  /**
+   * Runs one step and returns its outcome. If the stream drops after the step started, the server still
+   * finishes it and saves the result, so poll for that and replay the events this client missed.
+   */
+  async function runStepRequest(body: { app?: string; state?: string }, signal: AbortSignal) {
+    const res = await fetch("/api/generate", { method: "POST", body: JSON.stringify(body), signal });
+    if (!res.ok || !res.body) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      setLog((l) => [...l, { type: "error", message: err.error ?? "Request failed" }]);
+      return { done: true };
+    }
+    let stepId = "";
+    let received = 0; // non-note events applied, to know which saved events were missed
+    try {
+      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+      let buf = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += value;
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const e = JSON.parse(line) as StepEvent;
+          if (e.type === "step") stepId = e.id;
+          if (e.type !== "note") received++;
+          const outcome = apply(e);
+          if (outcome) return outcome;
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name === "AbortError" || !stepId) throw err;
+    }
+    // A dropped connection can also end cleanly, so reaching here means the result never arrived.
+    if (!stepId) throw new Error("The connection closed before the step finished.");
+    setLog((l) => [...l, { type: "status", message: "Connection dropped; waiting for this step to finish on the server…" }]);
+    for (let waited = 0; waited < 300; waited += 4) {
+      await new Promise((r) => setTimeout(r, 4000));
+      if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+      const poll = await fetch(`/api/generate?step=${stepId}`, { signal, cache: "no-store" }).catch(() => null);
+      if (!poll || poll.status === 202) continue;
+      if (!poll.ok) break;
+      const saved = (await poll.json()) as StoredStep;
+      let outcome: { next?: string; done?: boolean } | null = null;
+      for (const e of saved.events.slice(received)) outcome = apply(e) ?? outcome;
+      if (outcome) return outcome;
+      break;
+    }
+    throw new Error("The connection closed before the step finished.");
+  }
+
   async function run(name: string) {
     if (!name.trim()) return;
     abort.current?.abort();
@@ -36,28 +103,25 @@ export function LiveGenerator() {
     const t0 = Date.now();
     const timer = setInterval(() => setElapsed(Math.round((Date.now() - t0) / 1000)), 1000);
     try {
-      const res = await fetch("/api/generate", { method: "POST", body: JSON.stringify({ app: name }), signal: ctrl.signal });
-      if (!res.ok || !res.body) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        setLog([{ type: "error", message: err.error ?? "Request failed" }]);
-        return;
-      }
-      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-      let buf = "";
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += value;
-        const lines = buf.split("\n");
-        buf = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const e = JSON.parse(line) as AgentEvent;
-          if (e.type === "note") setNotes((n) => n + e.text);
-          else if (e.type === "guide") setGuide(e.guide);
-          else setLog((l) => [...l, e]);
+      // A run is a series of short step requests: each streams its events and ends with the signed
+      // state for the next step, the guide, or an error. A step whose connection drops is retried once.
+      let body: { app?: string; state?: string } = { app: name };
+      for (let step = 0, retried = false; step < 20; step++) {
+        let end: { next?: string; done?: boolean } = {};
+        try {
+          end = await runStepRequest(body, ctrl.signal);
+        } catch (err) {
+          if ((err as Error).name === "AbortError" || retried) throw err;
+          retried = true;
+          setLog((l) => [...l, { type: "status", message: "Connection dropped, retrying this step…" }]);
+          step--;
+          continue;
         }
+        retried = false;
+        if (end.done || !end.next) return;
+        body = { state: end.next };
       }
+      throw new Error("Too many steps; try again.");
     } catch (err) {
       if ((err as Error).name !== "AbortError") setLog((l) => [...l, { type: "error", message: (err as Error).message }]);
     } finally {
@@ -81,7 +145,7 @@ export function LiveGenerator() {
       <div className="max-w-3xl space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Generate a guide for any app</h1>
         <p className="text-zinc-600 dark:text-zinc-400">
-          An agent searches the provider&apos;s docs, reads the relevant pages, probes their OAuth endpoints, then writes a guide with every claim labelled by evidence. Usually 1–3 minutes.
+          An agent searches the provider&apos;s docs, reads the relevant pages, probes their OAuth endpoints, then writes a guide with every claim labelled by evidence. Usually 2–4 minutes.
         </p>
       </div>
       <form
