@@ -72,7 +72,7 @@ See `/method` (data in `data/verification.json`). An independent verifier agent 
 
 ### Live generation, tested end to end
 
-Calendly and Linear were generated live from the CLI, Linear through the deployed API, and Airtable through the stepped UI. Calendly took 170s: 134s research with 9 probes and ~15 searches, 36s writing. The guide validated on the first try, with no dangling source ids. Its verdict: easy, PKCE (S256) required, refresh tokens rotate on every use, Composio managed app available. It listed 8 open uncertainties, including access-token lifetime and rate limits found only in third-party sources.
+Live runs: Calendly from the CLI, Airtable through the local UI, and Linear on the deployed site, both as one long HTTP/1.1 request and through the stepped UI. The deployed UI run took 275s in four steps (56s, 133s, 44s, 37s) and used 13 sources. The second step's connection dropped mid-step on my network. The page polled the saved step result and carried on without re-running it, which is the recovery path working for real. Calendly took 170s: 134s research with 9 probes and ~15 searches, 36s writing. The guide validated on the first try, with no dangling source ids. Its verdict: easy, PKCE (S256) required, refresh tokens rotate on every use, Composio managed app available. It listed 8 open uncertainties, including access-token lifetime and rate limits found only in third-party sources.
 
 ## Limitations
 
